@@ -1,0 +1,68 @@
+server:
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: notifi-app
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/notifi_db
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: user
+    password: password
+    listener:
+      simple:
+        retry:
+          enabled: false
+        default-requeue-rejected: false # Rejected messages go to DLQ
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:test@example.com}
+    password: ${MAIL_PASSWORD:test}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+app:
+  jwt:
+    secret: 9a4f2c8d3b7a1e6f45c8a0b3f267d8b1d4e6f3c8a9d2b5f8e3a9c8b5f6v8a3d9
+    expiration-ms: 86400000 # 24 hours
+
+twilio:
+  account-sid: ${TWILIO_ACCOUNT_SID:test}
+  auth-token: ${TWILIO_AUTH_TOKEN:test}
+  from-number: ${TWILIO_FROM_NUMBER:test}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
