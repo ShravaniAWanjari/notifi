@@ -32,6 +32,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
 
         String clientIp = request.getRemoteAddr();
+        if (clientIp == null || clientIp.isBlank()) {
+            clientIp = "unknown-ip";
+        }
         RateLimitService.RateLimitTier tier;
 
         if (path.startsWith("/api/auth")) {

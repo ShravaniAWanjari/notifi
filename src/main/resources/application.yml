@@ -6,9 +6,9 @@ spring:
     name: notifi-app
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/notifi_db
-    username: user
-    password: password
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:notifi_db}
+    username: ${DB_USER:user}
+    password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -20,10 +20,10 @@ spring:
         format_sql: true
 
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: user
-    password: password
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:user}
+    password: ${RABBITMQ_PASSWORD:password}
     listener:
       simple:
         retry:
@@ -32,12 +32,12 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
   mail:
-    host: smtp.gmail.com
-    port: 587
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
     username: ${MAIL_USERNAME:test@example.com}
     password: ${MAIL_PASSWORD:test}
     properties:
@@ -49,8 +49,8 @@ spring:
 
 app:
   jwt:
-    secret: 9a4f2c8d3b7a1e6f45c8a0b3f267d8b1d4e6f3c8a9d2b5f8e3a9c8b5f6v8a3d9
-    expiration-ms: 86400000 # 24 hours
+    secret: ${JWT_SECRET:9a4f2c8d3b7a1e6f45c8a0b3f267d8b1d4e6f3c8a9d2b5f8e3a9c8b5f6v8a3d9}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000} # 24 hours
 
 twilio:
   account-sid: ${TWILIO_ACCOUNT_SID:test}

@@ -23,6 +23,11 @@ public class TemplateRenderService {
 
     public String render(NotificationTemplate notificationTemplate, Map<String, Object> variables) {
         try {
+            // Safe fallback for draft/unsaved templates without an ID
+            if (notificationTemplate.getId() == null) {
+                return handlebars.compileInline(notificationTemplate.getContent()).apply(variables);
+            }
+
             Template template = templateCache.computeIfAbsent(notificationTemplate.getId(), id -> {
                 try {
                     return handlebars.compileInline(notificationTemplate.getContent());
@@ -33,6 +38,15 @@ public class TemplateRenderService {
             return template.apply(variables);
         } catch (IOException e) {
             throw new RuntimeException("Failed to render template", e);
+        }
+    }
+
+    /**
+     * Evicts a template from the compiled cache when updated or deleted.
+     */
+    public void evictCache(UUID templateId) {
+        if (templateId != null) {
+            templateCache.remove(templateId);
         }
     }
 }
