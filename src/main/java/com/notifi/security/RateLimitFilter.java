@@ -6,7 +6,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -54,15 +53,21 @@ public class RateLimitFilter extends OncePerRequestFilter {
             tier = RateLimitService.RateLimitTier.MANAGEMENT; // default
         }
 
-        // The key could be IP or User ID. For auth we use IP.
-        String bucketKey = tier.name() + "_" + clientIp;
-        Bucket bucket = rateLimitService.resolveBucket(bucketKey, tier);
+        try {
+            String bucketKey = tier.name() + "_" + clientIp;
+            Bucket bucket = rateLimitService.resolveBucket(bucketKey, tier);
 
-        if (bucket.tryConsume(1)) {
-            filterChain.doFilter(request, response);
-        } else {
-            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-            response.getWriter().write("Too many requests");
+            if (bucket.tryConsume(1)) {
+                filterChain.doFilter(request, response);
+            } else {
+                response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\": \"Too many requests\", \"status\": 429}");
+            }
+        } catch (Exception e) {
+            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Internal Server Error\", \"status\": 500}");
         }
     }
 }

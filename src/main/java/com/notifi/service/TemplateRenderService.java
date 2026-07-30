@@ -3,22 +3,27 @@ package com.notifi.service;
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
 import com.notifi.entity.NotificationTemplate;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class TemplateRenderService {
 
     private final Handlebars handlebars;
-    private final Map<UUID, Template> templateCache;
+    private final Cache<UUID, Template> templateCache;
 
     public TemplateRenderService() {
         this.handlebars = new Handlebars();
-        this.templateCache = new ConcurrentHashMap<>();
+        this.templateCache = Caffeine.newBuilder()
+                .maximumSize(1000)
+                .expireAfterAccess(24, TimeUnit.HOURS)
+                .build();
     }
 
     public String render(NotificationTemplate notificationTemplate, Map<String, Object> variables) {
@@ -28,14 +33,18 @@ public class TemplateRenderService {
                 return handlebars.compileInline(notificationTemplate.getContent()).apply(variables);
             }
 
-            Template template = templateCache.computeIfAbsent(notificationTemplate.getId(), id -> {
+            Template compiledTemplate = templateCache.get(notificationTemplate.getId(), key -> {
                 try {
                     return handlebars.compileInline(notificationTemplate.getContent());
                 } catch (IOException e) {
-                    throw new RuntimeException("Failed to compile template inline", e);
+                    throw new RuntimeException("Failed to compile template", e);
                 }
             });
-            return template.apply(variables);
+
+            if (compiledTemplate == null) {
+                throw new RuntimeException("Template compilation resulted in null");
+            }
+            return compiledTemplate.apply(variables);
         } catch (IOException e) {
             throw new RuntimeException("Failed to render template", e);
         }
@@ -45,8 +54,6 @@ public class TemplateRenderService {
      * Evicts a template from the compiled cache when updated or deleted.
      */
     public void evictCache(UUID templateId) {
-        if (templateId != null) {
-            templateCache.remove(templateId);
-        }
+        templateCache.invalidate(templateId);
     }
 }

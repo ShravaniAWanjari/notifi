@@ -2,6 +2,8 @@ package com.notifi.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
@@ -30,11 +32,13 @@ public class NotificationTemplate {
     @Column(nullable = false)
     private String name;
 
-    @NotBlank(message = "Channel is required")
-    @Column(nullable = false)
-    private String channel; // e.g., EMAIL, SMS, WEBHOOK, IN_APP
+    @NotNull(message = "Channel is required")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private NotificationChannel channel; // e.g., EMAIL, SMS, WEBHOOK, IN_APP
 
     @NotBlank(message = "Content is required")
+    @Size(max = 65535, message = "Content cannot exceed 64KB")
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content; // The actual template string with placeholders
 
