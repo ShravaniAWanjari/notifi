@@ -1,4 +1,4 @@
-# Notifi
+# Ping
 
 An event-driven, multi-tenant notification platform built with Spring Boot.
 
